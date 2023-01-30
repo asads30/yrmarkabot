@@ -8,10 +8,6 @@ const axios = require('axios')
 const express = require("express")
 const app = express()
 const cors = require('cors')
-app.use('/static', express.static('photo'))
-app.use(cors({
-    origin: '*'
-}))
 const bot = new Telegraf(data.token)
 var https = require('https'),     
     http = require('http'), 
@@ -30,6 +26,10 @@ con.connect(function(err) {
 function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
+app.use('/static', express.static('photo'))
+app.use(cors({
+    origin: '*'
+}))
 const text2 = `☀️ Чтобы я смог сделать твой канал еще круче, тебе нужно выполнить несколько простых действий:
 
 1) Добавь @Yrmarkabot в администраторы своего канала
@@ -634,5 +634,6 @@ app.get('/channels', function (req, res) {
     })
 });
 
-var httpServer = http.createServer(app);
-httpServer.listen(3000);
+app.listen(3000, () => {
+    console.log(`Проект запущен на http://localhost:3000`);
+});
