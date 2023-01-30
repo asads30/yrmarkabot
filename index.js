@@ -5,16 +5,23 @@ const data = require('./data')
 const texts = require('./texts')
 const mysql = require('mysql')
 const axios = require('axios')
+const express = require("express")
+const app = express()
+const cors = require('cors')
+app.use('/static', express.static('photo'))
+app.use(cors({
+    origin: '*'
+}))
 const bot = new Telegraf(data.token)
 var https = require('https'),     
-    http = require('http'),                                           
+    http = require('http'), 
     Stream = require('stream').Transform,                                  
     fs = require('fs')
 var con = mysql.createConnection({
     host: "localhost",
-    database: "tgbiz",
+    database: "telegram",
     user: "root",
-    password: "",
+    password: "root",
     charset: "utf8mb4_general_ci"
 })
 con.connect(function(err) {
@@ -25,7 +32,7 @@ function isNumeric(n) {
 }
 const text2 = `☀️ Чтобы я смог сделать твой канал еще круче, тебе нужно выполнить несколько простых действий:
 
-1) Добавь @tgmbusinessbot в администраторы своего канала
+1) Добавь @Yrmarkabot в администраторы своего канала
 2) Перешли мне адрес (username или ссылку) своего канала`
 const text4 = `✅Я все опубликовал: пост на канале с описанием товара и стоимостью только что вышел. 
 
@@ -64,7 +71,7 @@ bot.start((ctx) => {
 
             if(current_user?.id === undefined){
                 con.query(`INSERT INTO users (user_id, first_name, last_name, username, role, balance, step) VALUES (?, ?, ?, ?, ?, ?, ?)`, [user_id, first_name, last_name, username, 'author', 0, 0])
-                ctx.replyWithPhoto('https://wpaka.uz/photo/01.jpg', {
+                ctx.replyWithPhoto(`https://wpaka.uz/photo/01.jpg`, {
                     caption: text1,
                     reply_markup: {
                         "inline_keyboard": [
@@ -285,7 +292,7 @@ ${my_channels}`;
                             })
                         }
                     }).catch(e => {
-                        ctx.reply('😕 Неправильный формат канала. Отправь нам в формате: @channel или ссылку 1', {
+                        ctx.reply('😕 Ошибка: Ты точно добавил наш бот в администраторы канала? Либо ты неправильно нам присылаешь нам адрес канала', {
                             reply_markup: {
                                 remove_keyboard: true
                             }
@@ -354,7 +361,7 @@ ${my_channels}`;
                         description: post?.des,
                         currency: 'RUB',
                         prices: [{ label: post?.title, amount: 100 * post?.price }],
-                        photo_url: 'https://vyboroved.ru/images/newimiges/8-lychshih-professionalnuh-fotoapparatov/8-lychshih-professionalnuh-fotoapparatov.jpg',
+                        photo_url: `https://wpaka.site/bot/01/photo/${post?.image}.jpg`,
                         photo_width: '800',
                         photo_height: '480',
                         need_name: true,
@@ -397,7 +404,7 @@ bot.on('photo', async (ctx, next) => {
                     });
                 }).end();
                 con.query(`UPDATE users SET step = '2-4' WHERE user_id = ${user_id}`);
-                ctx.replyWithPhoto('https://wpaka.uz/photo/07.jpg', {
+                ctx.replyWithPhoto('https://wpaka.site/photo/07.jpg', {
                     caption: 'А теперь давай расскажем им, сколько это стоит. 👌🏻 Не забудь, что оплата принимается в рублях 😉',
                     reply_markup: {
                         remove_keyboard: true
@@ -487,7 +494,7 @@ bot.on('callback_query', (ctx, next) => {
                     description: post?.des,
                     currency: 'RUB',
                     prices: [{ label: post?.title, amount: 100 * post?.price }],
-                    photo_url: 'https://vyboroved.ru/images/newimiges/8-lychshih-professionalnuh-fotoapparatov/8-lychshih-professionalnuh-fotoapparatov.jpg',
+                    photo_url: `https://wpaka.site/bot/01/photo/${post?.image}.jpg`,
                     photo_width: '800',
                     photo_height: '480',
                     need_name: true,
@@ -602,3 +609,33 @@ bot.on('successful_payment', async (ctx, next) => {
 })
 
 bot.launch()
+
+app.get('/users', function (req, res) {
+    con.query(`SELECT * FROM users`, function (err, result, fields) {
+        res.send(result);
+    })
+});
+
+app.get('/posts', function (req, res) {
+    con.query(`SELECT * FROM posts`, function (err, result, fields) {
+        res.send(result);
+    })
+});
+
+app.get('/payments', function (req, res) {
+    con.query(`SELECT * FROM payments`, function (err, result, fields) {
+        res.send(result);
+    })
+});
+
+app.get('/channels', function (req, res) {
+    con.query(`SELECT * FROM channels`, function (err, result, fields) {
+        res.send(result);
+    })
+});
+
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer(app);
+
+httpServer.listen(8080);
+httpsServer.listen(8443);
